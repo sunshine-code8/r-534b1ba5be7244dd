@@ -1,0 +1,33 @@
+task: pretrain
+data_config: configs/config_pretrain.yaml
+output_dir: output/neuraldsp_fwl/exp1_pretrain
+
+model:
+  n_samples: 256
+  n_channels: 1
+  n_rows: 128
+  n_cols: 128
+  dim: 32
+  waveform_patch_size: 32
+  heads: [2, 2, 2]
+  depths: [2, 2, 2]
+  window_size: [2, 4]
+  mlp_ratio: 2
+  dropout: [0.3, 0.3, 0.3, 0.3, 0.3]
+  do_matched_filtering: true
+
+pretrain:
+  mask_ratio: 0.70
+  patch_size: [256, 16, 16]
+
+training:
+  seed: 42
+  epochs: 100
+  batch_size_per_gpu: 8
+  effective_batch_size: 32
+  lr: 0.0001
+  weight_decay: 0.01
+  scheduler: none
+  gradient_clip: 1.0
+  bf16: true
+  num_workers: 8

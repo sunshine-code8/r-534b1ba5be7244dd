@@ -1,0 +1,66 @@
+uv run python -m experiments.neuraldsp_fwl.train \
+  --config experiments/neuraldsp_fwl/configs/exp1_pretrain.yaml
+
+uv run torchrun \
+  --standalone \
+  --nproc_per_node=1 \
+  -m experiments.neuraldsp_fwl.train \
+  --config experiments/neuraldsp_fwl/configs/exp1_pretrain.yaml
+
+# FPS Test
+
+python benchmark_wavedsp.py --model all --device cuda:7 --precision fp32 \
+  --batch-size 1 --warmup 5 --iterations 20 --repeats 5 \
+  --csv output/wavedsp/fast_fine_fp32.csv
+
+uv run python benchmark_wavedsp.py \
+  --model fast --device cuda:7 --precision fp32 \
+  --height 332 --width 400 --time-bins 256 \
+  --patch-size 16 --patch-dim 8 --stem-channels 96 \
+  --full-head --output both
+
+# FAST AND FINE training
+CUDA_VISIBLE_DEVICES=6 uv run --no-sync python -m experiments.wavedsp.train \
+  --config experiments/wavedsp/configs/fast_ghost.yaml \
+  --data-root /home/fanrundi/datasets/Ghost-fwl/ghost_dataset
+
+CUDA_VISIBLE_DEVICES=2,3 uv run --no-sync torchrun --standalone --nproc_per_node=2 \
+  -m experiments.wavedsp.train \
+  --config experiments/wavedsp/configs/fine_ghost.yaml \
+  --data-root /home/fanrundi/datasets/Ghost-fwl/ghost_dataset
+
+# FAST pretrain
+
+CUDA_VISIBLE_DEVICES=0 uv run --no-sync python -m experiments.wavedsp.pretrain \
+  --config experiments/wavedsp/configs/fast_mae.yaml
+
+CUDA_VISIBLE_DEVICES=0,1 uv run --no-sync python -m torch.distributed.run \
+  --standalone --nproc_per_node=2 \
+  -m experiments.wavedsp.pretrain \
+  --config experiments/wavedsp/configs/fast_mae.yaml
+
+# FAST frozen mae
+
+CUDA_VISIBLE_DEVICES=0 uv run --no-sync python -m experiments.wavedsp.train \
+  --config experiments/wavedsp/configs/fast_mae_frozen.yaml
+
+CUDA_VISIBLE_DEVICES=0,1 uv run --no-sync python -m torch.distributed.run \
+  --standalone --nproc_per_node=2 \
+  -m experiments.wavedsp.train \
+  --config experiments/wavedsp/configs/fast_mae_frozen.yaml
+
+
+# evaluate and test ------all 会依次执行estimate->recall->生成点云->计算ghost removal rate
+uv run python -m experiments.wavedsp.evaluate all \
+  --model fast \
+  --checkpoint output/wavedsp/fast_mae_finetune/20261004_174602_572772/last.pt \
+  --device cuda:7
+
+uv run python -m experiments.wavedsp.evaluate all \
+  --model fine \
+  --checkpoint output/wavedsp/fine_ghost/20260929_191218_317255/last.pt \
+  --device cuda:4
+
+# 单独导出confusion matrix
+uv run --no-sync python -m experiments.wavedsp.confusion_matrix \
+  --recall-json output/wavedsp/fast_ghost/fast_16patch/evaluation/recall.json

@@ -1,0 +1,28 @@
+model: fast
+model_kwargs:
+  # full_head: true  # false: groups=T/patch_size (original); true: groups=1
+  stem_channels: 128
+  # patch_size: 8
+data_config: configs/config_train.yaml
+cache_root: data/ghost_dataset_cache_v1
+target_size: [400, 332, 256]  # X,Y,T after Ghost preprocessing
+output_dir: output/wavedsp/fast_ghost_stem128
+
+supervised:
+  num_classes: 4
+  focal_alpha: [0.0001, 0.05, 0.25, 0.7]
+  focal_gamma: 2.0
+  ignore_index: -1
+
+training:
+  seed: 42
+  epochs: 100
+  batch_size_per_gpu: 8
+  effective_batch_size: 32
+  lr: 0.0001
+  weight_decay: 0.01
+  scheduler: none
+  gradient_clip: 1.0
+  bf16: true
+  num_workers: 8
+  native_cache_layout: true

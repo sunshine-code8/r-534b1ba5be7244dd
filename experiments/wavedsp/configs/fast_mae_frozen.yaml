@@ -1,0 +1,36 @@
+model: fast
+# Explicitly matches the completed FAST MAE checkpoint.
+model_kwargs:
+  full_head: false  # false: groups=T/patch_size (original); true: groups=1
+  patch_size: 16
+  patch_dim: 8
+  stem_channels: 96
+  bottleneck_mixer: true
+data_config: configs/config_train.yaml
+cache_root: data/ghost_dataset_cache_v1
+target_size: [400, 332, 256]
+output_dir: output/wavedsp/fast_mae_frozen
+
+transfer:
+  pretrained_checkpoint: output/wavedsp/fast_mae/fast_pretrain_patch16/last.pt
+  freeze_backbone: true  # Freeze embedding + entire U-Net; train the new classification head only.
+
+supervised:
+  num_classes: 4
+  focal_alpha: [0.0001, 0.05, 0.25, 0.7]
+  focal_gamma: 2.0
+  ignore_index: -1
+
+training:
+  seed: 42
+  epochs: 100
+  batch_size_per_gpu: 8
+  effective_batch_size: 32
+  lr: 0.0001
+  weight_decay: 0.01
+  scheduler: none
+  gradient_clip: 1.0
+  bf16: true
+  num_workers: 8
+  native_cache_layout: true
+  prefetch_factor: 1

@@ -1,0 +1,29 @@
+model: fast
+model_kwargs: {}
+# Only voxel directories and deterministic crop/bin settings are read from this file.
+# Peak settings and the original Ghost-FWL model/training settings are not used.
+data_config: configs/config_pretrain.yaml
+data_root: data/mae_dataset
+cache_root: data/mae_dataset_cache_v1  # Symlink to ~/datasets/Ghost-fwl/mae_dataset_cache_v1
+target_size: [400, 332, 256]  # X,Y,T; full frame after deterministic preprocessing
+output_dir: output/wavedsp/fast_mae
+loss: masked_mse
+
+masking:
+  block_size_yx: [16, 16]  # Spatial blocks, each covering all 256 time bins
+  ratio: 0.70
+  value: 0.0
+  validation_seed: 20261001  # Stable per sample, independent of batching and rank
+
+training:
+  seed: 42
+  epochs: 100
+  batch_size_per_gpu: 8  # Reduce this (e.g. 4 or 2) if GPU memory is insufficient
+  effective_batch_size: 32
+  lr: 0.0001
+  weight_decay: 0.01
+  scheduler: none
+  gradient_clip: 1.0
+  bf16: true
+  num_workers: 8
+  prefetch_factor: 1

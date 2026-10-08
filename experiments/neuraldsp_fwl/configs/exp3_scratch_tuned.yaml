@@ -1,0 +1,39 @@
+task: supervised
+data_config: configs/config_train.yaml
+output_dir: output/neuraldsp_fwl/exp3_scratch_tuned
+
+model:
+  n_samples: 256
+  n_channels: 1
+  n_rows: 128
+  n_cols: 128
+  dim: 32
+  waveform_patch_size: 32
+  heads: [2, 2, 2]
+  depths: [2, 2, 2]
+  window_size: [2, 4]
+  mlp_ratio: 2
+  dropout: [0.3, 0.3, 0.3, 0.3, 0.3]
+  do_matched_filtering: true
+
+supervised:
+  num_classes: 4
+  pretrained_backbone: null
+  freeze_backbone: false
+  focal_alpha: [0.0001, 0.05, 0.25, 0.7]
+  focal_gamma: 2.0
+  ignore_index: -1
+
+training:
+  seed: 42
+  epochs: 150
+  batch_size_per_gpu: 2
+  effective_batch_size: 32
+  lr: 0.0003
+  weight_decay: 0.01
+  scheduler: cosine
+  warmup_epochs: 5
+  min_lr: 0.000001
+  gradient_clip: 1.0
+  bf16: true
+  num_workers: 8

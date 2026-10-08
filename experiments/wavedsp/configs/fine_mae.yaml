@@ -1,0 +1,28 @@
+model: fine
+model_kwargs:
+  attention_chunk_size: 256
+data_config: configs/config_pretrain.yaml
+data_root: data/mae_dataset
+cache_root: data/mae_dataset_cache_v1  # Symlink to ~/datasets/Ghost-fwl/mae_dataset_cache_v1
+target_size: [400, 332, 256]
+output_dir: output/wavedsp/fine_mae
+loss: masked_mse
+
+masking:
+  block_size_yx: [16, 16]
+  ratio: 0.70
+  value: 0.0
+  validation_seed: 20261001
+
+training:
+  seed: 42
+  epochs: 100
+  batch_size_per_gpu: 8
+  effective_batch_size: 32
+  lr: 0.0001
+  weight_decay: 0.01
+  scheduler: none
+  gradient_clip: 1.0
+  bf16: true
+  num_workers: 8
+  prefetch_factor: 1
